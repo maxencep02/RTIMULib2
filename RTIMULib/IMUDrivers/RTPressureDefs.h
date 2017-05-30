@@ -32,6 +32,7 @@
 #define RTPRESSURE_TYPE_LPS25H              3                   // LPS25H
 #define RTPRESSURE_TYPE_MS5611              4                   // MS5611
 #define RTPRESSURE_TYPE_MS5637              5                   // MS5637
+#define RTPRESSURE_TYPE_BMP280              6                   // BMP280
 
 //----------------------------------------------------------
 //
@@ -49,6 +50,23 @@
 #define BMP180_REG_SCO              0xf4
 #define BMP180_REG_RESULT           0xf6
 #define BMP180_REG_XLSB             0xf8
+
+//----------------------------------------------------------
+//
+//  BMP280
+
+//  BMP280 I2C Slave Addresses
+
+#define BMP280_ADDRESS              0x77
+#define BMP280_REG_ID               0xd0
+#define BMP280_ID                   0x55
+
+//	Register map
+
+#define BMP280_REG_AC1              0xaa
+#define BMP280_REG_SCO              0xf4
+#define BMP280_REG_RESULT           0xf6
+#define BMP280_REG_XLSB             0xf8
 
 //----------------------------------------------------------
 //
