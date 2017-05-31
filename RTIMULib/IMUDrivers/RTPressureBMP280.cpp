@@ -22,6 +22,8 @@
 //  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "RTPressureBMP280.h"
+#include "bmp280.h"
+
 
 RTPressureBMP280::RTPressureBMP280(RTIMUSettings *settings) : RTPressure(settings)
 {
@@ -35,7 +37,7 @@ RTPressureBMP280::~RTPressureBMP280()
 bool RTPressureBMP280::pressureInit()
 {
     unsigned char result;
-    unsigned char data[22];
+    unsigned char data[24];
 
     m_pressureAddr = m_settings->m_I2CPressureAddress;
 
@@ -51,20 +53,26 @@ bool RTPressureBMP280::pressureInit()
 
     // get calibration data
 
-    if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_AC1, 22, data, "Failed to read BMP280 calibration data"))
+    if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_dig_T1, 24, data, "Failed to read BMP280 calibration data"))
         return false;
 
-    m_AC1 = (int16_t)(((uint16_t)data[0]) << 8) + (uint16_t)data[1];
-    m_AC2 = (int16_t)(((uint16_t)data[2]) << 8) + (uint16_t)data[3];
-    m_AC3 = (int16_t)(((uint16_t)data[4]) << 8) + (uint16_t)data[4];
-    m_AC4 = (((uint16_t)data[6]) << 8) + (uint16_t)data[7];
-    m_AC5 = (((uint16_t)data[8]) << 8) + (uint16_t)data[9];
-    m_AC6 = (((uint16_t)data[10]) << 8) + (uint16_t)data[11];
-    m_B1 = (int16_t)(((uint16_t)data[12]) << 8) + (uint16_t)data[13];
-    m_B2 = (int16_t)(((uint16_t)data[14]) << 8) + (uint16_t)data[15];
-    m_MB = (int16_t)(((uint16_t)data[16]) << 8) + (uint16_t)data[17];
-    m_MC = (int16_t)(((uint16_t)data[18]) << 8) + (uint16_t)data[19];
-    m_MD = (int16_t)(((uint16_t)data[20]) << 8) + (uint16_t)data[21];
+    m_dig_T1 = (int16_t)(((uint16_t)data[0]) << 8) + (uint16_t)data[1];
+    m_dig_T2 = (int16_t)(((uint16_t)data[2]) << 8) + (uint16_t)data[3];
+    m_dig_T3 = (int16_t)(((uint16_t)data[4]) << 8) + (uint16_t)data[5];
+    m_dig_P1 = (((uint16_t)data[6]) << 8) + (uint16_t)data[7];
+    m_dig_P2 = (((uint16_t)data[8]) << 8) + (uint16_t)data[9];
+    m_dig_P3 = (((uint16_t)data[10]) << 8) + (uint16_t)data[11];
+    m_dig_P4 = (((uint16_t)data[12]) << 8) + (uint16_t)data[13];
+    m_dig_P5 = (((uint16_t)data[14]) << 8) + (uint16_t)data[15];
+    m_dig_P6 = (((uint16_t)data[16]) << 8) + (uint16_t)data[17];
+    m_dig_P7 = (((uint16_t)data[18]) << 8) + (uint16_t)data[19];
+    m_dig_P8 = (((uint16_t)data[20]) << 8) + (uint16_t)data[21];
+    m_dig_P9 = (((uint16_t)data[22]) << 8) + (uint16_t)data[23];
+    // m_B1 = (int16_t)(((uint16_t)data[12]) << 8) + (uint16_t)data[13];
+    // m_B2 = (int16_t)(((uint16_t)data[14]) << 8) + (uint16_t)data[15];
+    // m_MB = (int16_t)(((uint16_t)data[16]) << 8) + (uint16_t)data[17];
+    // m_MC = (int16_t)(((uint16_t)data[18]) << 8) + (uint16_t)data[19];
+    // m_MD = (int16_t)(((uint16_t)data[20]) << 8) + (uint16_t)data[21];
 
     m_state = BMP280_STATE_IDLE;
     m_oss = BMP280_SCO_PRESSURECONV_ULP;
@@ -154,55 +162,36 @@ void RTPressureBMP280::pressureBackground()
 
         m_state = BMP280_STATE_IDLE;
 
+        
         // calculate compensated temperature
 
-        int32_t X1 = (((int32_t)m_rawTemperature - m_AC6) * m_AC5) / 32768;
+        int32_t X1 = (((int32_t)m_rawTemperature - m_dig_T1) * m_dig_T2);
 
-        if ((X1 + m_MD) == 0) {
-            break;
-        }
-
-        int32_t X2 = (m_MC * 2048)  / (X1 + m_MD);
+        // if ((X1 + m_MD) == 0) {
+            // break;
+        // }
+        int32_t X2 = ((((int32_t)m_rawTemperature - m_dig_T1) * ((int32_t)m_rawTemperature)- m_dig_T1) * m_dig_T3);
         int32_t B5 = X1 + X2;
-        m_temperature = (RTFLOAT)((B5 + 8) / 16) / (RTFLOAT)10;
+        m_temperature = (RTFLOAT)((B5 * 5) + 128);
 
         // calculate compensated pressure
-
-        int32_t B6 = B5 - 4000;
-        //          printf("B6 = %d\n", B6);
-        X1 = (m_B2 * ((B6 * B6) / 4096)) / 2048;
-        //          printf("X1 = %d\n", X1);
-        X2 = (m_AC2 * B6) / 2048;
-        //          printf("X2 = %d\n", X2);
-        int32_t X3 = X1 + X2;
-        //          printf("X3 = %d\n", X3);
-        int32_t B3 = (((m_AC1 * 4 + X3) << m_oss) + 2) / 4;
-        //          printf("B3 = %d\n", B3);
-        X1 = (m_AC3 * B6) / 8192;
-        //          printf("X1 = %d\n", X1);
-        X2 = (m_B1 * ((B6 * B6) / 4096)) / 65536;
-        //          printf("X2 = %d\n", X2);
-        X3 = ((X1 + X2) + 2) / 4;
-        //          printf("X3 = %d\n", X3);
-        int32_t B4 = (m_AC4 * (unsigned long)(X3 + 32768)) / 32768;
-        //          printf("B4 = %d\n", B4);
-        uint32_t B7 = ((unsigned long)pressure - B3) * (50000 >> m_oss);
-        //          printf("B7 = %d\n", B7);
-
-        int32_t p;
-        if (B7 < 0x80000000)
-        p = (B7 * 2) / B4;
+        
+        X1 = (B5 / 2.0 - 64000.0;
+        X2 = (X1 * X1 * m_dig_P6) / 32786.0;
+        int32_t X3 = X2 + X1 * m_dig_P5 * 2.0;
+        int32_t B3 = ((X3 / 4.0 + m_dig_P4 * 65536.0) << m_oss);
+        X1 = (m_dig_P3 * X1 * X1 / 524288.0 + m_dig_P2 * X1) / 524288.0;
+        X1 = (1.0 + X1 / 32768.0) * m_dig_P1;
+        
+        
+        if (X1 == 0)
+        p = 0;
             else
-        p = (B7 / B4) * 2;
-
-        //          printf("p = %d\n", p);
-        X1 = (p / 256) * (p / 256);
-        //          printf("X1 = %d\n", X1);
-        X1 = (X1 * 3038) / 65536;
-        //          printf("X1 = %d\n", X1);
-        X2 = (-7357 * p) / 65536;
-        //          printf("X2 = %d\n", X2);
-        m_pressure = (RTFLOAT)(p + (X1 + X2 + 3791) / 16) / (RTFLOAT)100;      // the extra 100 factor is to get 1hPa units
+        p = 1048576.0 - m_rawPressure;
+        p = ((p - B3 / 4096.0) * 6250.0 / X1;
+        X1 = m_dig_P9 * p * p / 2147483648.0;
+        B3 = p * m_dig_P8 / 32768.0;
+        m_pressure = (RTFLOAT)(p + (X1 + B3 + m_dig_P7) / 16.0) / (RTFLOAT)100;      // the extra 100 factor is to get 1hPa units
 
         m_validReadings = true;
 
@@ -213,17 +202,20 @@ void RTPressureBMP280::pressureBackground()
 
 void RTPressureBMP280::setTestData()
 {
-    m_AC1 = 408;
-    m_AC2 = -72;
-    m_AC3 = -14383;
-    m_AC4 = 32741;
-    m_AC5 = 32757;
-    m_AC6 = 23153;
-    m_B1 = 6190;
-    m_B2 = 4;
-    m_MB = -32767;
-    m_MC = -8711;
-    m_MD = 2868;
+    m_dig_T1 = 408;
+    m_dig_T2 = -72;
+    m_dig_T3 = -14383;
+    m_dig_P4 = 32741;
+    m_dig_P5 = 32757;
+    m_dig_P6 = 23153;
+    m_dig_P7 = 32741;
+    m_dig_P8 = 32757;
+    m_dig_P9 = 23153;
+    // m_B1 = 6190;
+    // m_B2 = 4;
+    // m_MB = -32767;
+    // m_MC = -8711;
+    // m_MD = 2868;
 
     m_rawTemperature = 27898;
     m_rawPressure = 23843;

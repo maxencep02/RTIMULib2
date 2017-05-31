@@ -24,7 +24,6 @@
 #ifndef _RTPRESSUREBMP280_H_
 #define _RTPRESSUREBMP280_H_
 
-
 #include "RTPressure.h"
 
 //  State definitions
@@ -32,7 +31,6 @@
 #define BMP280_STATE_IDLE               0
 #define BMP280_STATE_TEMPERATURE        1
 #define BMP280_STATE_PRESSURE           2
-#define BMP280_API
 
 //  Conversion reg defs
 
@@ -63,31 +61,9 @@ private:
     RTFLOAT m_pressure;                                     // the current pressure
     RTFLOAT m_temperature;                                  // the current temperature
 
-    // This is the calibration data read from the sensor
-
-    int32_t m_dig_T1;
-    int32_t m_dig_T2;
-    int32_t m_dig_T3;
-    uint32_t m_dig_P1;
-    uint32_t m_dig_P2;
-    uint32_t m_dig_P3;
-    uint32_t m_dig_P4;
-    uint32_t m_dig_P5;
-    uint32_t m_dig_P6;
-    uint32_t m_dig_P7;
-    uint32_t m_dig_P8;
-    uint32_t m_dig_P9;
-    // int32_t m_B1;
-    // int32_t m_B2;
-    // int32_t m_MB;
-    // int32_t m_MC;
-    // int32_t m_MD;
 
     int m_state;
     int m_oss;
-
-    uint16_t m_rawPressure;
-    uint16_t m_rawTemperature;
 
     bool m_validReadings;
 };

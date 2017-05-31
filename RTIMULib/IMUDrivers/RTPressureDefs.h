@@ -59,14 +59,14 @@
 
 #define BMP280_ADDRESS              0x77
 #define BMP280_REG_ID               0xd0
-#define BMP280_ID                   0x55
+#define BMP280_ID                   0x58
 
 //	Register map
 
-#define BMP280_REG_AC1              0xaa
+#define BMP280_REG_dig_T1           0x88
 #define BMP280_REG_SCO              0xf4
-#define BMP280_REG_RESULT           0xf6
-#define BMP280_REG_XLSB             0xf8
+#define BMP280_REG_RESULT           0xf3
+#define BMP280_REG_XLSB             0xf9
 
 //----------------------------------------------------------
 //
