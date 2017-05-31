@@ -32,15 +32,15 @@
 #define BMP280_STATE_IDLE               0
 #define BMP280_STATE_TEMPERATURE        1
 #define BMP280_STATE_PRESSURE           2
-#define BMP280_API
 
 //  Conversion reg defs
 
-#define BMP280_SCO_TEMPCONV             0x2e                // temperature conversion
-#define BMP280_SCO_PRESSURECONV_ULP     0                   // ultra low power pressure conversion
-#define BMP280_SCO_PRESSURECONV_STD     1                   // standard pressure conversion
-#define BMP280_SCO_PRESSURECONV_HR      2                   // high res pressure conversion
-#define BMP280_SCO_PRESSURECONV_UHR     3                   // ultra high res pressure conversion
+#define BMP280_status_TEMPCONV             0xf4                // temperature conversion
+#define BMP280_status_PRESSURECONV_ULP     0                   // ultra low power pressure conversion
+#define BMP280_status_PRESSURECONV_LP      1                   // low power pressure conversion
+#define BMP280_status_PRESSURECONV_STD     2                   // standard pressure conversion
+#define BMP280_status_PRESSURECONV_HR      3                   // high res pressure conversion
+#define BMP280_status_PRESSURECONV_UHR     4                   // ultra high res pressure conversion
 
 class RTIMUSettings;
 

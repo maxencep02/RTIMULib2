@@ -64,9 +64,11 @@
 //	Register map
 
 #define BMP280_REG_dig_T1           0x88
-#define BMP280_REG_SCO              0xf4
-#define BMP280_REG_RESULT           0xf3
-#define BMP280_REG_XLSB             0xf9
+#define BMP280_REG_status           0xf3
+#define BMP280_REG_TEMP_MSB         0xfa
+#define BMP280_REG_TEMP_XLSB        0xfc
+#define BMP280_REG_PRESS_MSB        0xf7
+#define BMP280_REG_PRESS_XLSB       0xf9
 
 //----------------------------------------------------------
 //

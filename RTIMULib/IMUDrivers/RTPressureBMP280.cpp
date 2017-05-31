@@ -75,7 +75,7 @@ bool RTPressureBMP280::pressureInit()
     // m_MD = (int16_t)(((uint16_t)data[20]) << 8) + (uint16_t)data[21];
 
     m_state = BMP280_STATE_IDLE;
-    m_oss = BMP280_SCO_PRESSURECONV_ULP;
+    m_oss = BMP280_status_PRESSURECONV_ULP;
     return true;
 }
 
@@ -88,7 +88,7 @@ bool RTPressureBMP280::pressureRead(RTIMU_DATA& data)
 
     if (m_state == BMP280_STATE_IDLE) {
         // start a temperature conversion
-        if (!m_settings->HALWrite(m_pressureAddr, BMP280_REG_SCO, BMP280_SCO_TEMPCONV, "Failed to start temperature conversion")) {
+        if (!m_settings->HALWrite(m_pressureAddr, BMP280_REG_status, BMP280_status_TEMPCONV, "Failed to start temperature conversion")) {
             return false;
         } else {
             m_state = BMP280_STATE_TEMPERATURE;
@@ -117,19 +117,19 @@ void RTPressureBMP280::pressureBackground()
         break;
 
         case BMP280_STATE_TEMPERATURE:
-        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_SCO, 1, data, "Failed to read BMP280 temp conv status")) {
+        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_status, 1, data, "Failed to read BMP280 temp conv status")) {
             break;
         }
         if ((data[0] & 0x20) == 0x20)
             break;                                      // conversion not finished
-        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_RESULT, 2, data, "Failed to read BMP280 temp conv result")) {
+        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_TEMP_MSB, 2, data, "Failed to read BMP280 temp conv result")) {
             m_state = BMP280_STATE_IDLE;
             break;
         }
         m_rawTemperature = (((uint16_t)data[0]) << 8) + (uint16_t)data[1];
 
         data[0] = 0x34 + (m_oss << 6);
-        if (!m_settings->HALWrite(m_pressureAddr, BMP280_REG_SCO, 1, data, "Failed to start pressure conversion")) {
+        if (!m_settings->HALWrite(m_pressureAddr, BMP280_REG_status, 1, data, "Failed to start pressure conversion")) {
             m_state = BMP280_STATE_IDLE;
             break;
         }
@@ -137,18 +137,18 @@ void RTPressureBMP280::pressureBackground()
         break;
 
         case BMP280_STATE_PRESSURE:
-        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_SCO, 1, data, "Failed to read BMP280 pressure conv status")) {
+        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_status, 1, data, "Failed to read BMP280 pressure conv status")) {
             break;
         }
         if ((data[0] & 0x20) == 0x20)
             break;                                      // conversion not finished
-        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_RESULT, 2, data, "Failed to read BMP280 temp conv result")) {
+        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_TEMP_MSB, 2, data, "Failed to read BMP280 temp conv result")) {
             m_state = BMP280_STATE_IDLE;
             break;
         }
         m_rawPressure = (((uint16_t)data[0]) << 8) + (uint16_t)data[1];
 
-        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_XLSB, 1, data, "Failed to read BMP280 XLSB")) {
+        if (!m_settings->HALRead(m_pressureAddr, BMP280_REG_PRESS_XLSB, 1, data, "Failed to read BMP280 XLSB")) {
             m_state = BMP280_STATE_IDLE;
             break;
         }
@@ -202,21 +202,24 @@ void RTPressureBMP280::pressureBackground()
 
 void RTPressureBMP280::setTestData()
 {
-    m_dig_T1 = 408;
-    m_dig_T2 = -72;
-    m_dig_T3 = -14383;
-    m_dig_P4 = 32741;
-    m_dig_P5 = 32757;
-    m_dig_P6 = 23153;
-    m_dig_P7 = 32741;
-    m_dig_P8 = 32757;
-    m_dig_P9 = 23153;
+    m_dig_T1 = 27504;
+    m_dig_T2 = 26435;
+    m_dig_T3 = -1000;
+    m_dig_P1 = 36477;
+    m_dig_P2 = -10685;
+    m_dig_P3 = 3024;
+    m_dig_P4 = 2855;
+    m_dig_P5 = 140;
+    m_dig_P6 = -7;
+    m_dig_P7 = 15500;
+    m_dig_P8 = 14600;
+    m_dig_P9 = 6000;
     // m_B1 = 6190;
     // m_B2 = 4;
     // m_MB = -32767;
     // m_MC = -8711;
     // m_MD = 2868;
 
-    m_rawTemperature = 27898;
-    m_rawPressure = 23843;
+    m_rawTemperature = 519888;
+    m_rawPressure = 415148;
 }
